@@ -32,6 +32,9 @@
   :ensure t
   )
 
+;; ---------------------------------------------------------
+;; C/C++
+;; ---------------------------------------------------------
 (use-package clang-format
   :defer t
   :ensure t
@@ -39,6 +42,61 @@
   :hook (c-mode c++-mode)
   :config
   (clang-format-on-save-mode))
+
+(use-package lsp-mode
+  :ensure t
+  :defer t
+  :hook ((lsp-mode . lsp-enable-which-key-integration))
+  :config (setq lsp-completion-enable-additional-text-edit nil) (define-key lsp-mode-map (kbd "C-c l") lsp-command-map)) 
+
+(use-package lsp-ui
+  :commands lsp-ui-mode
+  :defer t
+  :ensure t)
+(use-package ccls
+  :ensure t
+  :defer t
+  :config
+  (setq ccls-executable "ccls")
+  (setq lsp-prefer-flymake nil)
+  (setq-default flycheck-disabled-checkers '(c/c++-clang c/c++-cppcheck c/c++-gcc))
+  :hook ((c-mode c++-mode objc-mode) .
+         (lambda () (require 'ccls) (lsp))))
+(use-package flycheck
+  :defer t
+  :ensure t)
+(use-package yasnippet
+  :defer t
+  :ensure t
+  :config (yas-global-mode))
+(use-package which-key
+  :defer t
+  :ensure t
+  :config (which-key-mode))
+(use-package helm-lsp
+  :defer t
+  :ensure t)
+(use-package helm
+  :defer t
+  :ensure t
+  :config (helm-mode))
+(use-package lsp-treemacs
+  :defer t
+  :ensure t)
+
+;;; This will enable emacs to compile a simple cpp single file without any makefile by just pressing [f9] key
+(defun code-compile()
+  (interactive)
+  (unless (file-exists-p "Makefile")
+    (set (make-local-variable 'compile-command)
+	 (let ((file (file-name-nondirectory buffer-file-name)))
+	   (format "%s -o %s %s"
+		   (if (equal (file-name-extension file) "cpp") "g++" "gcc")
+		   (file-name-sans-extension file)
+		   file)))
+    (compile compile-command)))
+(global-set-key [f9] 'code-compile)
+(set 'lsp-keymap-prefix "M-l")
 
 ;; ---------------------------------------------------------
 ;; Themes
